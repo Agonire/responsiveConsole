@@ -1,7 +1,6 @@
 ﻿using System;
-using Program.CustomExceptions;
 
-namespace Program.Commands
+namespace program.Commands
 {
     public class TextCommand : ICommand
     {

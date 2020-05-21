@@ -1,4 +1,4 @@
-﻿namespace Program.Commands
+﻿namespace program.Commands
 {
     public interface ICommand
     {

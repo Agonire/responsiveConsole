@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Program.CustomExceptions
+namespace program.CustomExceptions
 {
     public class InvalidPayloadException: Exception
     {

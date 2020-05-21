@@ -1,44 +1,61 @@
 ﻿using System;
-using System.Text.RegularExpressions;
-using Program.Commands;
-using Program.CustomExceptions;
-using Program.Data;
-using Program.Parsers;
+using System.Collections.Generic;
+using System.Linq;
+using program.Commands;
+using program.CustomExceptions;
+using program.Data;
+using program.Parsers;
+using program.Validators;
 
-namespace Program
+namespace program
 {
-    public static class CommandService
+    public class CommandService
     {
-        public static ICommand CreateCommand(Packet packet)
-        {
-            var commandType = "";
-            if (packet.Command.Length > 0)
-            {
-                commandType = packet.Command.Remove(0, 1);
-            }
+        public List<ICommandParser> DefaultCommandParsers { get; set; } = new List<ICommandParser>();
+        public List<IPayloadValidator> DefaultPayloadValidators { get; set; } = new List<IPayloadValidator>();
 
-            return commandType switch
+        public ICommand CreateCommand(Packet packet)
+        {
+            var commandType = IdentifyCommand(packet);
+
+            var validator = DefaultPayloadValidators.First(p => p.CommandType == commandType);
+            if (!ValidatePacket(packet, validator))
+                throw new InvalidPayloadException();
+
+            var parser = DefaultCommandParsers.First(p => p.CommandType == commandType);
+            return ParseCommand(packet, parser);
+        }
+
+        public static CommandEnum IdentifyCommand(Packet packet)
+        {
+            var commandLetter = "";
+            if (packet.Command.Length > 0)
+                commandLetter = packet.Command.Remove(0, 1);
+
+            return commandLetter switch
             {
-                "T" => CreateTextCommand(packet),
-                "S" => CreateSoundCommand(packet),
+                "T" => CommandEnum.TextCommand,
+                "S" => CommandEnum.SoundCommand,
                 _ => throw new InvalidPayloadException()
             };
         }
 
-        private static ICommand CreateTextCommand(Packet packet)
+        public bool ValidatePacket(Packet packet, IPayloadValidator validator)
         {
-            if(!Validator.ValidateTextCommand(packet.Parameters))
-                throw new InvalidPayloadException();
-
-            return new TextCommand(Parse.Text(packet.Parameters));
+            return validator.Validate(packet.Parameters);
         }
 
-        private static ICommand CreateSoundCommand(Packet packet)
+        public ICommand ParseCommand(Packet packet, ICommandParser parser)
         {
-            if(!Validator.ValidateSoundCommand(packet.Parameters))
-                throw new InvalidPayloadException();
-
-            return new SoundCommand(Parse.SoundQualities(packet.Parameters));
+            try
+            {
+                return parser.Parse(packet.Parameters);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Parser error");
+                throw ex;
+            }
         }
     }
 }

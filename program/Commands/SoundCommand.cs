@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Text.RegularExpressions;
-using Program.CustomExceptions;
-using Program.Data;
+using program.Data;
 
-namespace Program.Commands
+namespace program.Commands
 {
     public class SoundCommand : ICommand
     {

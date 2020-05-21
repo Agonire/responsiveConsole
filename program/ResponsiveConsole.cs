@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using program.Validators;
 
-namespace Program
+namespace program
 {
     public static class ResponsiveConsole
     {
@@ -10,9 +11,9 @@ namespace Program
         {
             var allowedChars = new Regex(@"[\x20-\x7E]");
 
-            var stringBuilder = new StringBuilder();
+            var inputStream = new StringBuilder();
 
-            while (!Validator.Validate(stringBuilder.ToString(), correctFormat))
+            while (!correctFormat.Match(inputStream.ToString()).Success)
             {
                 var inputChar = Console.ReadKey(true).KeyChar;
                 
@@ -20,14 +21,14 @@ namespace Program
                 if (inputChar == '\r')
                     break;
 
-                if (Validator.Validate(inputChar.ToString(), allowedChars))
-                    stringBuilder.Append(inputChar);
-                else if (inputChar == '\b' && stringBuilder.Length > 0)
-                    stringBuilder.Length--;
+                if (allowedChars.Match(inputChar.ToString()).Success)
+                    inputStream.Append(inputChar);
+                else if (inputChar == '\b' && inputStream.Length > 0)
+                    inputStream.Length--;
 
-                Console.WriteLine(stringBuilder.ToString());
+                Console.WriteLine(inputStream.ToString());
             }
-            return stringBuilder.ToString();
+            return inputStream.ToString();
         }
     }
 }

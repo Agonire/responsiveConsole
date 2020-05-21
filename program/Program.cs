@@ -1,38 +1,52 @@
 ﻿using System;
-using System.Text;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Program.CustomExceptions;
-using Program.Parsers;
+using program.CustomExceptions;
+using program.Parsers;
+using program.Validators;
 
-namespace Program
+namespace program
 {
     internal static class Program
     {
         private static void Main(string[] args)
         {
             Console.WriteLine("Running");
+
+            const string packetFormat = @"^[P][A-Z]{1}:[\x20-\x7E]*:[E]$";
+            var regex = new Regex(packetFormat);
             
             while (true)
             {
                 try
-                {
-                    const string format = @"^[P][A-Z]{1}:[\x20-\x7E]*:[E]$";
-                
-                    var inputData = ResponsiveConsole.ReadKeys(new Regex(format));
+                { 
+                    var inputData = ResponsiveConsole.ReadKeys(regex);
                     Console.WriteLine("---Input--- " + inputData);
 
-                    if (!Validator.ValidateRawInput(inputData, format))
+                    if (!regex.Match(inputData).Success)
                         throw new InvalidPackageException();
+                    
+                    var commandService = new CommandService();
+                    
+                    commandService.DefaultPayloadValidators.AddRange(new List<IPayloadValidator>() {
+                        new PayloadValidator(CommandEnum.TextCommand, new Regex(@"")),
+                        new PayloadValidator(CommandEnum.SoundCommand, new Regex(@"[0-9],[0-9]")),
+                    });
+                    commandService.DefaultCommandParsers.AddRange(new List<ICommandParser>()
+                    {
+                        new TextCommandParser(),
+                        new SoundCommandParser(),
+                    });
+                    
+                    var packet = new PacketParser().Parse(inputData);
 
-                    var packet = Parse.Packet(inputData);
+                    var type = CommandService.IdentifyCommand(packet);
 
-                    var command = CommandService.CreateCommand(packet);
+                    commandService.CreateCommand(packet);
+                    
+                    var command = commandService.CreateCommand(packet);
                     Console.WriteLine("ACK");
                     command.Execute();
-                }
-                catch(InvalidPackageException)
-                {
-                    Console.WriteLine("Invalid package");
                 }
                 catch (InvalidPayloadException)
                 {
@@ -40,7 +54,6 @@ namespace Program
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Something bad happened. Probably parsing errors.");
                     Console.WriteLine(ex.Message);
                     Console.WriteLine(ex.StackTrace);
                 }

@@ -1,4 +1,4 @@
-﻿namespace Program.Data
+﻿namespace program.Data
 {
     public class SoundQualities
     {
