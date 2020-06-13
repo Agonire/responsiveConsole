@@ -54,6 +54,7 @@ namespace program
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine("Parser error");
                     Console.WriteLine(ex.Message);
                     Console.WriteLine(ex.StackTrace);
                 }

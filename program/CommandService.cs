@@ -52,8 +52,7 @@ namespace program
                 return parser.Parse(packet.Parameters);
             }
             catch (Exception ex)
-            {
-                Console.WriteLine("Parser error");
+            {              
                 throw ex;
             }
         }
